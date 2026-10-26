@@ -19,6 +19,7 @@ $apps = @(
     'Tailscale.Tailscale'
     'wez.wezterm'
     'DEVCOM.JetBrainsMonoNerdFont'
+    'albertony.npiperelay'
 )
 
 foreach ($id in $apps) {

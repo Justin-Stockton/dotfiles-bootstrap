@@ -19,7 +19,8 @@ irm https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/bo
 
 [`bootstrap.ps1`](bootstrap.ps1):
 
-- installs 1Password, Tailscale, WezTerm, and JetBrainsMono Nerd Font with Winget
+- installs 1Password, Tailscale, WezTerm, JetBrainsMono Nerd Font, and npiperelay
+  (relays the 1Password SSH agent into WSL) with Winget
 - disables the Windows OpenSSH Authentication Agent so 1Password owns the agent pipe
 - writes `%USERPROFILE%\.wslconfig` (mirrored networking, DNS tunneling, auto proxy),
   backing up any different existing file
