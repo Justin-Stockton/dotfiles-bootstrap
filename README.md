@@ -66,20 +66,30 @@ Terminal: Catppuccin Mocha and Tokyo Night colors, the Catppuccin tab theme,
 JetBrainsMono Nerd Font, keybindings, and Ubuntu 24.04 as the default profile.
 
 Each machine keeps the profile list Terminal generates for it. The script gives
-every profile an icon from [`windows-terminal/icons`](windows-terminal/icons):
-Ubuntu, PowerShell, Command Prompt, Azure Cloud Shell, Visual Studio developer
-shells, and a generic terminal for anything else. WSL registers its profiles
-with their own color scheme and font, so the script sets the shared ones on
-those profiles directly. It backs up the previous settings and needs no
-administrator rights. Rerun it from PowerShell at any time:
+every profile an icon from [`windows-terminal/icons`](windows-terminal/icons),
+matched on the profile's name, source, and command line, and copies only the
+icons that machine uses:
+
+| Kind | Icons |
+| --- | --- |
+| Windows shells | `powershell` (Windows PowerShell), `pwsh` (PowerShell 7), `cmd`, `azure`, `developer` (Visual Studio) |
+| Other shells and tools | `git` (Git Bash), `ssh`, `docker`, `nushell`, `fish`, `python` |
+| WSL distributions | `ubuntu`, `debian`, `fedora`, `arch`, `alpine`, `opensuse`, `kali`, `nixos`, `linux` (other distributions) |
+| Fallback | `terminal` |
+
+WSL registers its profiles with their own color scheme and font, so the script
+sets the shared ones on those profiles directly. It backs up the previous
+settings and needs no administrator rights. Rerun it from PowerShell at any time:
 
 ```powershell
 irm https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/windows-terminal.ps1 | iex
 ```
 
-The SVG files are the icon sources. After editing one, render its PNG at 64
-pixels, which is what Terminal loads:
+[`windows-terminal/icons.py`](windows-terminal/icons.py) draws every icon as
+SVG and renders the 64-pixel PNG Terminal loads. To add or change one, edit its
+entry there, run the script (it needs `rsvg-convert` from `brew install librsvg`),
+and add a matching rule to `$iconRules` in `windows-terminal.ps1`:
 
 ```bash
-rsvg-convert -w 64 -h 64 windows-terminal/icons/ubuntu.svg -o windows-terminal/icons/ubuntu.png
+python3 windows-terminal/icons.py
 ```

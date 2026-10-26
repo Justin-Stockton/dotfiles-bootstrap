@@ -27,21 +27,39 @@ Get-SharedFile 'settings.json' $sharedPath
 $shared = [IO.File]::ReadAllText($sharedPath) | ConvertFrom-Json
 Remove-Item $sharedPath
 
-$icons = 'ubuntu', 'powershell', 'cmd', 'azure', 'developer', 'terminal'
-foreach ($icon in $icons) {
-    Get-SharedFile "icons/$icon.png" (Join-Path $iconDir "$icon.png")
+# Icons in windows-terminal/icons, matched on the profile's name, generator source, and
+# command line. Regexes are case-insensitive; the first match wins.
+$iconRules = [ordered]@{
+    developer = '^Developer '
+    powershell = '^Windows PowerShell'
+    pwsh = 'PowershellCore|^PowerShell|\bpwsh(\.exe)?\b'
+    cmd = '^Command Prompt|\bcmd\.exe\b'
+    azure = 'Azure'
+    git = 'Git Bash|\\Git\\'
+    docker = 'docker'
+    ssh = '^ssh\b|\bssh(\.exe)?\s'
+    nushell = 'Nushell|\bnu(\.exe)?\b'
+    fish = '\bfish\b'
+    python = 'Python|\bpython[0-9.]*(\.exe)?\b'
+    ubuntu = 'Ubuntu'
+    debian = 'Debian'
+    fedora = 'Fedora'
+    arch = '\bArch'
+    alpine = 'Alpine'
+    opensuse = 'SUSE'
+    kali = 'Kali'
+    nixos = 'NixOS'
+    linux = 'Linux|\bWSL\b|Alma|Rocky|Oracle|CentOS|RHEL'
 }
+$usedIcons = @{ terminal = $true }
 
 function Get-ProfileIcon($entry) {
-    $name = "$($entry.name)"
-    $icon = switch -Regex ($name) {
-        '^Developer ' { 'developer'; break }
-        'PowerShell' { 'powershell'; break }
-        '^Command Prompt' { 'cmd'; break }
-        'Azure' { 'azure'; break }
-        'Ubuntu' { 'ubuntu'; break }
-        default { 'terminal' }
+    $haystack = "$($entry.name)`n$($entry.source)`n$($entry.commandline)"
+    $icon = 'terminal'
+    foreach ($rule in $iconRules.GetEnumerator()) {
+        if ($haystack -match "(?m)$($rule.Value)") { $icon = $rule.Key; break }
     }
+    $usedIcons[$icon] = $true
     Join-Path $iconDir "$icon.png"
 }
 
@@ -82,6 +100,9 @@ foreach ($entry in $list) {
     $entry | Add-Member -Force -NotePropertyName icon -NotePropertyValue (Get-ProfileIcon $entry)
 }
 $settings.profiles | Add-Member -Force -NotePropertyName list -NotePropertyValue $list.ToArray()
+foreach ($icon in $usedIcons.Keys) {
+    Get-SharedFile "icons/$icon.png" (Join-Path $iconDir "$icon.png")
+}
 
 # Prefer WSL's own profile; it hides the older generated one on machines that have both.
 $ubuntu = @($list | Where-Object { $_.name -eq 'Ubuntu-24.04' -and -not $_.hidden } | Sort-Object { $_.source -ne 'Microsoft.WSL' })[0]
