@@ -21,6 +21,10 @@ irm https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/bo
 
 - installs 1Password, Tailscale, WezTerm, JetBrainsMono Nerd Font, and npiperelay
   (relays the 1Password SSH agent into WSL) with Winget
+- upgrades Windows Terminal and merges [`windows-terminal.json`](windows-terminal.json)
+  into its settings: Catppuccin Mocha and Tokyo Night colors, the Catppuccin tab theme,
+  JetBrainsMono Nerd Font, keybindings, and Ubuntu 24.04 as the default profile. The
+  machine's own profile list is kept, and the old settings are backed up.
 - disables the Windows OpenSSH Authentication Agent so 1Password owns the agent pipe
 - writes `%USERPROFILE%\.wslconfig` (mirrored networking, DNS tunneling, auto proxy),
   backing up any different existing file
