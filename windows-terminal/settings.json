@@ -88,7 +88,6 @@
                 "weight": "bold"
             },
             "historySize": 90000,
-            "icon": "\ud83d\udcbb",
             "intenseTextStyle": "all",
             "opacity": 100,
             "useAcrylic": true

@@ -44,41 +44,16 @@ if ($agent -and $agent.StartType -ne 'Disabled') {
 # Windows 11 ships Windows Terminal but can lag far behind; themes need a current release.
 winget upgrade --exact --id Microsoft.WindowsTerminal --accept-package-agreements --accept-source-agreements *> $null
 
-# Merge the shared look and keybindings into Windows Terminal. Each machine keeps its own
-# profile list, which Terminal generates for installed shells and WSL distributions.
-$terminalDir = Join-Path $env:LOCALAPPDATA 'Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState'
-$terminalSettings = Join-Path $terminalDir 'settings.json'
-$sharedPath = if ($PSScriptRoot) { Join-Path $PSScriptRoot 'windows-terminal.json' }
-$sharedJson = if ($sharedPath -and (Test-Path $sharedPath)) {
-    [IO.File]::ReadAllText($sharedPath)
+# Shared Windows Terminal look, keybindings, and profile icons. bootstrap.sh reruns this
+# once Ubuntu is registered so its WSL profile is styled too.
+Write-Step 'Configuring Windows Terminal'
+$local = $PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'windows-terminal.ps1'))
+if ($local) {
+    $terminalScript = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'windows-terminal.ps1'))
+    & ([scriptblock]::Create($terminalScript)) -Source (Join-Path $PSScriptRoot 'windows-terminal')
 } else {
-    (Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/windows-terminal.json').Content
-}
-$shared = $sharedJson | ConvertFrom-Json
-if (Test-Path $terminalSettings) {
-    $text = [IO.File]::ReadAllText($terminalSettings)
-    # Terminal allows // comment lines; Windows PowerShell's JSON parser does not.
-    $settings = ($text -split "`n" | Where-Object { $_ -notmatch '^\s*//' }) -join "`n" | ConvertFrom-Json
-} else {
-    New-Item -ItemType Directory -Force $terminalDir | Out-Null
-    $text = $null
-    $settings = [pscustomobject]@{ profiles = [pscustomobject]@{ list = @() } }
-}
-foreach ($name in $shared.PSObject.Properties.Name) {
-    if ($name -ne 'profiles') { $settings | Add-Member -Force -NotePropertyName $name -NotePropertyValue $shared.$name }
-}
-$settings.profiles | Add-Member -Force -NotePropertyName defaults -NotePropertyValue $shared.profiles.defaults
-$ubuntu = @($settings.profiles.list) | Where-Object { $_.name -eq 'Ubuntu-24.04' -and -not $_.hidden } | Select-Object -First 1
-# Terminal resolves a profile name when the generated WSL profile is not saved yet.
-$default = if ($ubuntu) { $ubuntu.guid } else { 'Ubuntu-24.04' }
-$settings | Add-Member -Force -NotePropertyName defaultProfile -NotePropertyValue $default
-$json = $settings | ConvertTo-Json -Depth 32
-if ($json -ne $text) {
-    Write-Step "Updating Windows Terminal settings"
-    if ($null -ne $text) {
-        Copy-Item $terminalSettings "$terminalSettings.backup.$(Get-Date -Format yyyyMMddHHmmss)"
-    }
-    [IO.File]::WriteAllText($terminalSettings, $json, (New-Object Text.UTF8Encoding $false))
+    $terminalScript = (Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/windows-terminal.ps1').Content
+    & ([scriptblock]::Create($terminalScript))
 }
 
 $wslConfig = Join-Path $env:USERPROFILE '.wslconfig'

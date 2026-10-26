@@ -44,6 +44,15 @@ EOF
   exit 0
 }
 
+configure_windows_terminal() {
+  is_wsl && command -v powershell.exe >/dev/null 2>&1 || return 0
+  say "Styling the Windows Terminal profiles"
+  # Rerun from WSL: Ubuntu's Terminal profile only exists once the distribution is registered.
+  powershell.exe -NoProfile -Command \
+    '& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Justin-Stockton/dotfiles-bootstrap/main/windows-terminal.ps1).Content))' |
+    tr -d '\r' || echo "Windows Terminal styling failed; rerun windows-terminal.ps1 from PowerShell later." >&2
+}
+
 install_prerequisites() {
   say "Installing APT prerequisites"
   sudo apt-get update
@@ -104,6 +113,7 @@ clone_dotfiles() {
 }
 
 configure_wsl
+configure_windows_terminal
 install_prerequisites
 install_homebrew
 install_gh
